@@ -1,0 +1,992 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+    Name = "GrimV2",
+    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+    LoadingTitle = "Grow A Garden",
+    LoadingSubtitle = "by BojanCesar12",
+    Theme = "Serenity", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+ 
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+ 
+    ConfigurationSaving = {
+       Enabled = true,
+       FolderName = nil, -- Create a custom folder for your hub/game
+       FileName = "by BojanCesar12"
+    },
+ 
+    Discord = {
+       Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+       Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+       RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+    },
+ 
+    KeySystem = true, -- Set this to true to use our key system
+    KeySettings = {
+       Title = "Made by BojanCesar12",
+       Subtitle = "Key System",
+       Note = "Updated Version of GrimV2", -- Use this to tell the user how to get a key
+       FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+       SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+       Key = {"69"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+    }
+ })
+
+
+------------------------------------ Tabs ------------------------------------
+
+local GardenTab = Window:CreateTab("Grow A Garden 🍇", false) -- Title, Image
+local PlayerTab = Window:CreateTab("Player 👤", false) -- Title, Image
+local TeleportTab = Window:CreateTab("Teleport 🕳️", false) -- Title, Image
+local VisualTab = Window:CreateTab("Visual 👁️", false) -- Title, Image
+local OtherTab = Window:CreateTab("Other ⚙️", false) -- Title, Image
+
+
+
+
+
+
+
+------------------------------------ Garden Tab ------------------------------------
+
+local GardenSection = GardenTab:CreateSection("Auto Farm")
+
+-- Services
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+-- Variables
+local lastTeleportTime = 0
+local isSelling = false
+local ToggleState = false -- Controls both teleport, sell, and spam E
+local TeleportConnection
+
+-- Function to handle spamming the E key
+local function spamEKey()
+    while ToggleState do
+        -- Press E
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        task.wait(0)
+        -- Release E
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        task.wait(0)
+    end
+end
+
+-- Combined Toggle for Auto Teleport, Auto Sell, and Spam E
+local CombinedToggle = GardenTab:CreateToggle({
+    Name = "Auto Farm + Spam E",
+    CurrentValue = false,
+    Flag = "AutoFarmToggle",
+    Callback = function(Value)
+        ToggleState = Value
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+
+        if ToggleState then
+            -- Start spamming the E key
+            task.spawn(function()
+                spamEKey()
+            end)
+
+            -- Start auto teleport
+            TeleportConnection = RunService.RenderStepped:Connect(function()
+                if tick() - lastTeleportTime < 0.1 then return end
+                lastTeleportTime = tick()
+
+                if isSelling then return end
+
+                -- Find player's farm
+                local playerFarm = nil
+                for _, farm in pairs(workspace.Farm:GetChildren()) do
+                    local dataFolder = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data")
+                    local ownerValue = dataFolder and dataFolder:FindFirstChild("Owner")
+                    if ownerValue and ownerValue.Value == playerName then
+                        playerFarm = farm
+                        break
+                    end
+                end
+
+                if playerFarm and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local plantsFolder = playerFarm:FindFirstChild("Important") and playerFarm.Important:FindFirstChild("Plants_Physical")
+                    if plantsFolder then
+                        local validFruits = {}
+
+                        for _, fruitModel in pairs(plantsFolder:GetChildren()) do
+                            local fruitsFolder = fruitModel:FindFirstChild("Fruits")
+                            if fruitsFolder then
+                                for _, fruit in pairs(fruitsFolder:GetChildren()) do
+                                    local part1 = fruit:FindFirstChild("1")
+                                    local part2 = fruit:FindFirstChild("2")
+
+                                    if part1 and part1:FindFirstChildOfClass("ProximityPrompt") then
+                                        table.insert(validFruits, part1)
+                                    elseif part2 and part2:FindFirstChildOfClass("ProximityPrompt") then
+                                        table.insert(validFruits, part2)
+                                    end
+                                end
+                            end
+                        end
+
+                        if #validFruits > 0 then
+                            local randomPart = validFruits[math.random(1, #validFruits)]
+                            player.Character:SetPrimaryPartCFrame(randomPart.CFrame + Vector3.new(0, 5, 0))
+                        end
+                    end
+                end
+            end)
+
+            -- Start auto sell loop
+            task.spawn(function()
+                local replicatedStorage = game:GetService("ReplicatedStorage")
+                local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
+
+                while ToggleState do
+                    isSelling = true
+
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local hrp = character:WaitForChild("HumanoidRootPart")
+
+                    local originalCFrame = hrp.CFrame
+                    local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+                    hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+
+                    task.wait(0.2)
+                    sellEvent:FireServer()
+
+                    hrp.CFrame = originalCFrame
+                    isSelling = false
+
+                    -- Wait before next sell
+                    for _ = 1, 50 do
+                        if not ToggleState then break end
+                        task.wait(0.1)
+                    end
+                end
+            end)
+        else
+            -- Stop teleport
+            if TeleportConnection then
+                TeleportConnection:Disconnect()
+                TeleportConnection = nil
+            end
+
+            -- Stop auto-sell by setting ToggleState to false (loop will exit)
+            ToggleState = false
+
+            -- Stop spamming E
+            -- No additional cleanup needed since the spamEKey loop checks ToggleState
+        end
+    end
+})
+
+-----------------------------------------------------------------------------------
+
+-- Variables for the toggle
+local SpamEEnabled = false
+
+-- Function to spam the E key
+local function spamEKey()
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    while SpamEEnabled do
+        -- Press E
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        task.wait(0)
+        -- Release E
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        task.wait(0)
+    end
+end
+
+-- Create the toggle in the Player Tab
+local SpamEToggle = GardenTab:CreateToggle({
+    Name = "Spam E",
+    CurrentValue = false,
+    Flag = "SpamEKey", -- Unique flag for saving configuration
+    Callback = function(state)
+        SpamEEnabled = state
+        if SpamEEnabled then
+            -- Start spamming the E key
+            task.spawn(function()
+                spamEKey()
+            end)
+        else
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+-- Function to set Exclusivity to AlwaysShow for prompts on parts named 1-100
+local function setPromptsToAlwaysShow()
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            local parent = obj.Parent
+            if parent and parent:IsA("BasePart") then
+                local partName = parent.Name
+                local partID = tonumber(partName)
+                if partID and partID >= 1 and partID <= 100 then
+                    obj.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow
+                end
+            end
+        end
+    end
+end
+
+-- Toggle for setting ProximityPrompts to AlwaysShow for parts 1-100
+local Toggle = GardenTab:CreateToggle({
+    Name = "Enable AlwaysShow for ProximityPrompts (1-100)",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        if Value then
+            -- Set ProximityPrompts to AlwaysShow for parts 1-100
+            setPromptsToAlwaysShow()
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local GardenSection = GardenTab:CreateSection("Sell")
+
+local Button = GardenTab:CreateButton({
+	Name = "Sell All",
+	Callback = function()
+		local player = game.Players.LocalPlayer
+		local backpack = player:WaitForChild("Backpack")
+		local replicatedStorage = game:GetService("ReplicatedStorage")
+		local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
+		
+		local function teleportAndSell()
+			local character = player.Character or player.CharacterAdded:Wait()
+			local hrp = character:WaitForChild("HumanoidRootPart")
+		
+			-- Save current position
+			local originalCFrame = hrp.CFrame
+		
+			-- Teleport to the sell point
+			local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+			hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+		
+			-- Wait and fire sell event
+			task.wait(0.2)
+			sellEvent:FireServer()
+		
+			-- Return to original position
+			hrp.CFrame = originalCFrame
+		end
+		
+		-- Call the teleportAndSell function once
+		teleportAndSell()
+	end,
+ })
+
+-----------------------------------------------------------------------------------
+
+local Button = GardenTab:CreateButton({
+	Name = "Sell This",
+	Callback = function()
+		local player = game.Players.LocalPlayer
+		local backpack = player:WaitForChild("Backpack")
+		local replicatedStorage = game:GetService("ReplicatedStorage")
+		
+		local function teleportAndSell()
+			local character = player.Character or player.CharacterAdded:Wait()
+			local hrp = character:WaitForChild("HumanoidRootPart")
+		
+			-- Save current position
+			local originalCFrame = hrp.CFrame
+		
+			-- Teleport to the sell point
+			local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+			hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+		
+			-- Wait and fire the Sell_Item event
+			task.wait(0.2)
+			game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Sell_Item"):FireServer()
+		
+			-- Return to original position
+			hrp.CFrame = originalCFrame
+		end
+		
+		-- Call the teleportAndSell function once
+		teleportAndSell()
+	end,
+ })
+
+-----------------------------------------------------------------------------------
+
+local ToggleState = false
+
+local Toggle = GardenTab:CreateToggle({
+	Name = "Auto Sell",
+	CurrentValue = false,
+	Flag = "AutoSellToggle",
+	Callback = function(Value)
+		ToggleState = Value
+
+		local player = game.Players.LocalPlayer
+		local replicatedStorage = game:GetService("ReplicatedStorage")
+		local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
+
+		local function teleportAndSell()
+			local character = player.Character or player.CharacterAdded:Wait()
+			local hrp = character:WaitForChild("HumanoidRootPart")
+
+			-- Save current position
+			local originalCFrame = hrp.CFrame
+
+			-- Teleport to the sell point
+			local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+			hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+
+			-- Wait and fire sell event
+			task.wait(0.2)
+			sellEvent:FireServer()
+
+			-- Return to original position
+			hrp.CFrame = originalCFrame
+		end
+
+		-- Start loop if toggle is enabled
+		if ToggleState then
+			task.spawn(function()
+				while ToggleState do
+					teleportAndSell()
+					task.wait(10) -- adjust how often to auto-sell
+				end
+			end)
+		end
+	end
+})
+
+-----------------------------------------------------------------------------------
+
+local GardenSection = GardenTab:CreateSection("Auto Buy")
+
+-- Variables for the AutoBuy feature
+local toggleState = false
+local repeatActions = false
+
+local seeds = {
+    "Strawberry",
+    "Carrot",
+    "Blueberry",
+    "Orange Tulip",
+    "Tomato",
+    "Corn",
+    "Daffodil",
+    "Watermelon",
+    "Pumpkin",
+    "Apple",
+    "Bamboo",
+    "Coconut",
+    "Cactus",
+    "Dragon Fruit",
+    "Mango",
+    "Grape"
+}
+
+-- Function to handle the toggle state
+local AutoBuyToggle = GardenTab:CreateToggle({
+    Name = "Auto Shop",
+    CurrentValue = false,
+    Flag = "AutoBuySeeds", -- Unique flag for saving configuration
+    Callback = function(state)
+        toggleState = state
+        if toggleState then
+            repeatActions = true
+            -- Start the loop to buy seeds
+            task.spawn(function()
+                while repeatActions do
+                    for _, seed in ipairs(seeds) do
+                        local args = { seed }
+                        game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuySeedStock"):FireServer(unpack(args))
+                        task.wait(0.001) -- Optional: Delay between actions
+                    end
+                end
+            end)
+        else
+            repeatActions = false
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+-- Variables for the AutoBuy feature
+local toggleState2 = false
+local repeatActions2 = false
+
+local seeds = {
+    "WateringCan",
+    "GodlySprinkler",
+    "MasterSprinkler"
+}
+
+-- Function to handle the toggle state
+local AutoBuyEasterToggle = GardenTab:CreateToggle({
+    Name = "Auto Gear (Water, Godly, Master)",
+    CurrentValue = false,
+    Flag = "AutoBuyGear", -- Unique flag for saving configuration
+    Callback = function(state)
+        toggleState2 = state
+        if toggleState2 then
+            repeatActions2 = true
+            -- Start the loop to buy Easter seeds
+            task.spawn(function()
+                while repeatActions2 do
+                    for _, seed in ipairs(seeds) do
+                        local args = { seed }
+                        game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuyGearStock"):FireServer(unpack(args))
+                        task.wait(0.001) -- Optional: Delay between actions
+                    end
+                end
+            end)
+        else
+            repeatActions2 = false
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+-- Variables for the AutoBuy feature
+local toggleState2 = false
+local repeatActions2 = false
+
+local seeds = {
+    "Chocolate Carrot",
+    "Red Lollipop",
+    "Candy Sunflower",
+    "Easter Egg",
+    "Candy Blossom"
+}
+
+-- Function to handle the toggle state
+local AutoBuyEasterToggle = GardenTab:CreateToggle({
+    Name = "Auto Easter Shop",
+    CurrentValue = false,
+    Flag = "AutoBuyEasterSeeds", -- Unique flag for saving configuration
+    Callback = function(state)
+        toggleState2 = state
+        if toggleState2 then
+            repeatActions2 = true
+            -- Start the loop to buy Easter seeds
+            task.spawn(function()
+                while repeatActions2 do
+                    for _, seed in ipairs(seeds) do
+                        local args = { seed }
+                        game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuyEasterStock"):FireServer(unpack(args))
+                        task.wait(0.001) -- Optional: Delay between actions
+                    end
+                end
+            end)
+        else
+            repeatActions2 = false
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local GardenSection = GardenTab:CreateSection("Open")
+
+local ToggleSeedShopButton = GardenTab:CreateButton({
+    Name = "Seed Shop",
+    Callback = function()
+        -- Get the Seed_Shop GUI
+        local player = game:GetService("Players").LocalPlayer
+        local seedShop = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("Seed_Shop")
+
+        -- Check if the Seed_Shop GUI exists
+        if seedShop then
+            -- Toggle the Enabled property
+            seedShop.Enabled = not seedShop.Enabled
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local ToggleGearShopButton = GardenTab:CreateButton({
+    Name = "Gear Shop",
+    Callback = function()
+        -- Get the Easter_Shop GUI
+        local player = game:GetService("Players").LocalPlayer
+        local gearShop = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("Gear_Shop")
+
+        -- Check if the Easter_Shop GUI exists
+        if gearShop then
+            -- Toggle the Enabled property
+            gearShop.Enabled = not gearShop.Enabled
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local ToggleDailyQuestsButton = GardenTab:CreateButton({
+    Name = "Daily Quests",
+    Callback = function()
+        -- Get the DailyQuests_UI GUI
+        local player = game:GetService("Players").LocalPlayer
+        local dailyQuestsUI = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("DailyQuests_UI")
+
+        -- Check if the DailyQuests_UI GUI exists
+        if dailyQuestsUI then
+            -- Toggle the Enabled property
+            dailyQuestsUI.Enabled = not dailyQuestsUI.Enabled
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local ToggleEasterShopButton = GardenTab:CreateButton({
+    Name = "Easter Shop",
+    Callback = function()
+        -- Get the Easter_Shop GUI
+        local player = game:GetService("Players").LocalPlayer
+        local easterShop = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("Easter_Shop")
+
+        -- Check if the Easter_Shop GUI exists
+        if easterShop then
+            -- Toggle the Enabled property
+            easterShop.Enabled = not easterShop.Enabled
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+
+
+
+
+------------------------------------ Player Tab ------------------------------------
+
+local PlayerSection = PlayerTab:CreateSection("Player Config")
+
+local SpeedSlider = PlayerTab:CreateSlider({
+    Name = "Player Speed",
+    Range = {16, 250},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Flag = "PlayerSpeed", 
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end,
+ })
+
+ -----------------------------------------------------------------------------------
+
+ local JumpSlider = PlayerTab:CreateSlider({
+    Name = "Player Jump",
+    Range = {50, 500},
+    Increment = 1,
+    Suffix = "Jump",
+    CurrentValue = 50,
+    Flag = "PlayerJump", 
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end,
+ })
+
+ -----------------------------------------------------------------------------------
+
+ local InfiniteJumpToggle = PlayerTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfiniteJump", 
+    Callback = function(Value)
+        if Value then
+            
+            DisableInfiniteJump()
+            
+            _G.InfiniteJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+                local Player = game.Players.LocalPlayer
+                local Character = Player.Character or Player.CharacterAdded:Wait()
+                local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+                if Humanoid then
+                    Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        else
+            DisableInfiniteJump()
+        end
+    end,
+})
+
+
+function DisableInfiniteJump()
+    if _G.InfiniteJumpConnection then
+        _G.InfiniteJumpConnection:Disconnect()
+        _G.InfiniteJumpConnection = nil
+    end
+end
+
+-----------------------------------------------------------------------------------
+
+local NoclipToggle = PlayerTab:CreateToggle({
+    Name = "Noclip",
+    CurrentValue = false,
+    Flag = "Noclip",
+    Callback = function(Value)
+        if Value then
+            -- Enable Noclip
+            local Player = game.Players.LocalPlayer
+            local Character = Player.Character or Player.CharacterAdded:Wait()
+            _G.NoclipConnection = game:GetService("RunService").Stepped:Connect(function()
+                for _, Part in pairs(Character:GetDescendants()) do
+                    if Part:IsA("BasePart") then
+                        Part.CanCollide = false
+                    end
+                end
+            end)
+        else
+            -- Disable Noclip
+            if _G.NoclipConnection then
+                _G.NoclipConnection:Disconnect()
+                _G.NoclipConnection = nil
+            end
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local AntiAfkToggle = PlayerTab:CreateToggle({
+    Name = "Anti-Afk",
+    CurrentValue = false,
+    Flag = "AntiAfk", -- Unique flag for saving configuration
+    Callback = function(Value)
+        if Value then
+            -- Enable Anti-Afk
+            Rayfield:Notify({
+                Title = "Anti-Afk Enabled",
+                Content = "You will not be kicked for being idle.",
+                Duration = 3, -- Notification duration in seconds
+                Image = false, -- Set to true if you want an image
+            })
+
+            local VirtualUser = game:GetService("VirtualUser")
+            _G.AntiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new()) -- Simulate a right-click
+            end)
+        else
+            -- Disable Anti-Afk
+            Rayfield:Notify({
+                Title = "Anti-Afk Disabled",
+                Content = "You may now be kicked for being idle.",
+                Duration = 3, -- Notification duration in seconds
+                Image = false, -- Set to true if you want an image
+            })
+
+            if _G.AntiAFKConnection then
+                _G.AntiAFKConnection:Disconnect()
+                _G.AntiAFKConnection = nil
+            end
+        end
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+
+
+
+
+------------------------------------ Teleport Tab ------------------------------------
+
+local TeleportSection = TeleportTab:CreateSection("Teleport To Player")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Input field inside your existing TeleportSection
+local PlayerInput = TeleportTab:CreateInput({
+    Name = "Teleport to Player",
+    CurrentValue = "",  
+    PlaceholderText = "Type part of player name...",
+    RemoveTextAfterFocusLost = false,
+    Flag = "TeleportPlayerInput",
+    Callback = function(Text)
+        if Text == "" then return end
+
+        -- Try to find player whose name starts with the typed text (case-insensitive)
+        local matchedPlayer = nil
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Name:lower():sub(1, #Text) == Text:lower() then
+                matchedPlayer = player
+                break
+            end
+        end
+
+        if not matchedPlayer then
+            warn("No matching player found for:", Text)
+            return
+        end
+
+        local targetChar = matchedPlayer.Character or matchedPlayer.CharacterAdded:Wait()
+        local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+        if not targetHRP then
+            warn("Target player has no HumanoidRootPart")
+            return
+        end
+
+        local localChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+        if not localHRP then
+            warn("You have no HumanoidRootPart")
+            return
+        end
+
+        local targetPos = targetHRP.Position + Vector3.new(0, 3, 0)
+        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        local goal = {CFrame = CFrame.new(targetPos)}
+
+        local tween = game:GetService("TweenService"):Create(localHRP, tweenInfo, goal)
+        tween:Play()
+
+        print("Teleported to", matchedPlayer.Name)
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local TeleportSection = TeleportTab:CreateSection("Grow A Garden")
+
+TeleportTab:CreateButton({
+	Name = "Quest And Gear",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local player = Players.LocalPlayer
+
+		local targetPosition = Vector3.new(-269.1260070800781, 4.442999839782715, -14.034000396728516)
+
+		local function instantTeleport()
+			local character = player.Character or player.CharacterAdded:Wait()
+			local hrp = character:WaitForChild("HumanoidRootPart")
+			hrp.CFrame = CFrame.new(targetPosition)
+		end
+
+		instantTeleport()
+	end,
+})
+
+-----------------------------------------------------------------------------------
+
+
+
+
+
+------------------------------------ Visual Tab ------------------------------------
+
+local VisualSection = VisualTab:CreateSection("Esp And Highlight")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local highlightFolder = Instance.new("Folder", game.CoreGui)
+highlightFolder.Name = "PlayerHighlights"
+
+-- Store active highlights for cleanup
+local highlights = {}
+
+-- Function to create a highlight for a player
+local function addHighlightToPlayer(player, color)
+	if player == LocalPlayer then return end
+	if not player.Character then return end
+
+	local existing = highlightFolder:FindFirstChild(player.Name)
+	if existing then existing:Destroy() end
+
+	local highlight = Instance.new("Highlight")
+	highlight.Name = player.Name
+	highlight.Adornee = player.Character
+	highlight.FillTransparency = 0.5
+	highlight.OutlineTransparency = 0
+	highlight.FillColor = color
+	highlight.OutlineColor = color
+	highlight.Parent = highlightFolder
+	highlights[player.Name] = highlight
+end
+
+-- Function to remove all highlights
+local function removeAllHighlights()
+	for _, child in pairs(highlightFolder:GetChildren()) do
+		child:Destroy()
+	end
+end
+
+-- Function to watch for respawns
+local function watchPlayer(player, color)
+	player.CharacterAdded:Connect(function()
+		wait(1) -- Wait for character to load
+		addHighlightToPlayer(player, color)
+	end)
+end
+
+-- Keep current highlight color
+local currentHighlightColor = Color3.fromRGB(255, 0, 0)
+local highlightEnabled = false
+
+-- Rayfield Toggle
+VisualTab:CreateToggle({
+	Name = "Enable Player Highlight",
+	CurrentValue = false,
+	Flag = "HighlightToggle",
+	Callback = function(state)
+		highlightEnabled = state
+		if state then
+			for _, player in pairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer then
+					addHighlightToPlayer(player, currentHighlightColor)
+					watchPlayer(player, currentHighlightColor)
+				end
+			end
+
+			-- Handle new players joining
+			Players.PlayerAdded:Connect(function(player)
+				watchPlayer(player, currentHighlightColor)
+			end)
+		else
+			removeAllHighlights()
+		end
+	end,
+})
+
+-- Rayfield Color Picker
+VisualTab:CreateColorPicker({
+	Name = "Highlight Color",
+	Color = currentHighlightColor,
+	Flag = "HighlightColor",
+	Callback = function(color)
+		currentHighlightColor = color
+		for _, hl in pairs(highlightFolder:GetChildren()) do
+			if hl:IsA("Highlight") then
+				hl.FillColor = color
+				hl.OutlineColor = color
+			end
+		end
+	end,
+})
+
+-----------------------------------------------------------------------------------
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local espFolder = Instance.new("Folder", game.CoreGui)
+espFolder.Name = "NameESP"
+
+-- Function to create name tag
+local function createNameESP(player)
+	if player == LocalPlayer then return end
+	if not player.Character then return end
+	local head = player.Character:FindFirstChild("Head")
+	if not head then return end
+	if espFolder:FindFirstChild(player.Name) then return end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = player.Name
+	billboard.Adornee = head
+	billboard.Size = UDim2.new(0, 100, 0, 40)
+	billboard.StudsOffset = Vector3.new(0, 2, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = espFolder
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, 0, 1, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	nameLabel.TextStrokeTransparency = 0.5
+	nameLabel.Font = Enum.Font.SourceSansBold
+	nameLabel.TextScaled = true
+	nameLabel.Text = player.Name
+	nameLabel.Parent = billboard
+end
+
+-- Clear all ESPs
+local function removeAllESP()
+	for _, gui in pairs(espFolder:GetChildren()) do
+		gui:Destroy()
+	end
+end
+
+-- Hook character spawns to update ESP
+local function setupESPForPlayer(player)
+	player.CharacterAdded:Connect(function()
+		wait(1)
+		createNameESP(player)
+	end)
+end
+
+-- Rayfield Toggle
+VisualTab:CreateToggle({
+	Name = "ESP Name",
+	CurrentValue = false,
+	Flag = "NameESP",
+	Callback = function(state)
+		if state then
+			-- Turn ON
+			for _, player in pairs(Players:GetPlayers()) do
+				createNameESP(player)
+				setupESPForPlayer(player)
+			end
+
+			Players.PlayerAdded:Connect(function(player)
+				setupESPForPlayer(player)
+			end)
+		else
+			-- Turn OFF
+			removeAllESP()
+		end
+	end,
+})
+
+-----------------------------------------------------------------------------------
+
+
+
+
+
+------------------------------------ Other Tab ------------------------------------
+
+local OtherSection = OtherTab:CreateSection("Script")
+
+local Button = OtherTab:CreateButton({
+    Name = "Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        print("Infinite Yield Enabled")
+    end,
+ })
+
+
+ local Button = OtherTab:CreateButton({
+    Name = "Dex Explorer",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+        print("Dex Explorer Enabled")
+    end,
+ })
+
+-----------------------------------------------------------------------------------
+
+local OtherSection = OtherTab:CreateSection("Close")
+
+local Button = OtherTab:CreateButton({
+	Name = "Quit",
+	Callback = function()
+		Rayfield:Destroy()
+	end,
+ })
+
+ -----------------------------------------------------------------------------------
