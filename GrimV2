@@ -117,13 +117,22 @@ local CombinedToggle = GardenTab:CreateToggle({
                             local fruitsFolder = fruitModel:FindFirstChild("Fruits")
                             if fruitsFolder then
                                 for _, fruit in pairs(fruitsFolder:GetChildren()) do
+                                    -- Check Part 1
                                     local part1 = fruit:FindFirstChild("1")
-                                    local part2 = fruit:FindFirstChild("2")
-
                                     if part1 and part1:FindFirstChildOfClass("ProximityPrompt") then
                                         table.insert(validFruits, part1)
-                                    elseif part2 and part2:FindFirstChildOfClass("ProximityPrompt") then
+                                    end
+
+                                    -- Check Part 2
+                                    local part2 = fruit:FindFirstChild("2")
+                                    if part2 and part2:FindFirstChildOfClass("ProximityPrompt") then
                                         table.insert(validFruits, part2)
+                                    end
+
+                                    -- Check Part 4 (new addition)
+                                    local part4 = fruit:FindFirstChild("4")
+                                    if part4 and part4:FindFirstChildOfClass("ProximityPrompt") then
+                                        table.insert(validFruits, part4)
                                     end
                                 end
                             end
