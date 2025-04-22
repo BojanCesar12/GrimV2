@@ -421,13 +421,13 @@ local toggleState2 = false
 local repeatActions2 = false
 
 local seeds = {
-    "WateringCan",
-    "GodlySprinkler",
-    "MasterSprinkler"
+    "Watering Can",
+    "Godly Sprinkler",
+    "Master Sprinkler"
 }
 
 -- Function to handle the toggle state
-local AutoBuyEasterToggle = GardenTab:CreateToggle({
+local AutoBuyGearToggle = GardenTab:CreateToggle({
     Name = "Auto Gear (Water, Godly, Master)",
     CurrentValue = false,
     Flag = "AutoBuyGear", -- Unique flag for saving configuration
@@ -435,7 +435,7 @@ local AutoBuyEasterToggle = GardenTab:CreateToggle({
         toggleState2 = state
         if toggleState2 then
             repeatActions2 = true
-            -- Start the loop to buy Easter seeds
+            -- Start the loop to buy Gear seeds
             task.spawn(function()
                 while repeatActions2 do
                     for _, seed in ipairs(seeds) do
