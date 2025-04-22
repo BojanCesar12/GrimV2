@@ -76,7 +76,7 @@ end
 
 -- Combined Toggle for Auto Teleport, Auto Sell, and Spam E
 local CombinedToggle = GardenTab:CreateToggle({
-    Name = "Auto Farm + Spam E",
+    Name = "Auto Farm + Auto Sell",
     CurrentValue = false,
     Flag = "AutoFarmToggle",
     Callback = function(Value)
