@@ -2,44 +2,44 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
     Name = "GrimV2",
     Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-    LoadingTitle = "Grow A Garden",
-    LoadingSubtitle = "by BojanCesar12",
+    LoadingTitle = "GrimV2",
+    LoadingSubtitle = "Loading script...",
     Theme = "Serenity", -- Check https://docs.sirius.menu/rayfield/configuration/themes
- 
+
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
- 
+
     ConfigurationSaving = {
-       Enabled = false,
-       FolderName = nil, -- Create a custom folder for your hub/game
-       FileName = "by BojanCesar12"
+    Enabled = false,
+    FolderName = nil, -- Create a custom folder for your hub/game
+    FileName = "GrimV2"
     },
- 
+
     Discord = {
-       Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
-       Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
-       RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+    Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+    Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+    RememberJoins = true -- Set this to false to make them join the discord every time they load it up
     },
- 
+
     KeySystem = true, -- Set this to true to use our key system
     KeySettings = {
-       Title = "Made by BojanCesar12",
-       Subtitle = "Key System",
-       Note = "Updated Version of GrimV2", -- Use this to tell the user how to get a key
-       FileName = "GrimV2", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-       SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-       Key = {"69"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+    Title = "GrimV2",
+    Subtitle = "Key system",
+    Note = "Fixed ProximityPrompts", -- Use this to tell the user how to get a key
+    FileName = "GrimV2", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+    SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+    GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+    Key = {"69"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
     }
- })
+})
 
 
 ------------------------------------ Tabs ------------------------------------
 
 local GardenTab = Window:CreateTab("Grow A Garden 🍇", false) -- Title, Image
 local PlayerTab = Window:CreateTab("Player 👤", false) -- Title, Image
-local TeleportTab = Window:CreateTab("Teleport 🕳️", false) -- Title, Image
 local VisualTab = Window:CreateTab("Visual 👁️", false) -- Title, Image
+local TeleportTab = Window:CreateTab("Teleport 🕳️", false) -- Title, Image
 local OtherTab = Window:CreateTab("Other ⚙️", false) -- Title, Image
 
 
@@ -260,7 +260,7 @@ end
 -- Toggle for setting ProximityPrompts to AlwaysShow for parts 1-100
 local connection -- Store the connection to disconnect later
 local Toggle = GardenTab:CreateToggle({
-    Name = "Enable AlwaysShow for ProximityPrompts (1-100)",
+    Name = "Enable AlwaysShow for ProximityPrompts",
     CurrentValue = false,
     Flag = "ProximityPrompts",
     Callback = function(Value)
@@ -285,114 +285,114 @@ local Toggle = GardenTab:CreateToggle({
 local GardenSection = GardenTab:CreateSection("Sell")
 
 local Button = GardenTab:CreateButton({
-	Name = "Sell All",
-	Callback = function()
-		local player = game.Players.LocalPlayer
-		local backpack = player:WaitForChild("Backpack")
-		local replicatedStorage = game:GetService("ReplicatedStorage")
-		local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
-		
-		local function teleportAndSell()
-			local character = player.Character or player.CharacterAdded:Wait()
-			local hrp = character:WaitForChild("HumanoidRootPart")
-		
-			-- Save current position
-			local originalCFrame = hrp.CFrame
-		
-			-- Teleport to the sell point
-			local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
-			hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
-		
-			-- Wait and fire sell event
-			task.wait(0.2)
-			sellEvent:FireServer()
-		
-			-- Return to original position
-			hrp.CFrame = originalCFrame
-		end
-		
-		-- Call the teleportAndSell function once
-		teleportAndSell()
-	end,
- })
+    Name = "Sell All",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
+        
+        local function teleportAndSell()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+        
+            -- Save current position
+            local originalCFrame = hrp.CFrame
+        
+            -- Teleport to the sell point
+            local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+            hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+        
+            -- Wait and fire sell event
+            task.wait(0.2)
+            sellEvent:FireServer()
+        
+            -- Return to original position
+            hrp.CFrame = originalCFrame
+        end
+        
+        -- Call the teleportAndSell function once
+        teleportAndSell()
+    end,
+})
 
 -----------------------------------------------------------------------------------
 
 local Button = GardenTab:CreateButton({
-	Name = "Sell This",
-	Callback = function()
-		local player = game.Players.LocalPlayer
-		local backpack = player:WaitForChild("Backpack")
-		local replicatedStorage = game:GetService("ReplicatedStorage")
-		
-		local function teleportAndSell()
-			local character = player.Character or player.CharacterAdded:Wait()
-			local hrp = character:WaitForChild("HumanoidRootPart")
-		
-			-- Save current position
-			local originalCFrame = hrp.CFrame
-		
-			-- Teleport to the sell point
-			local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
-			hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
-		
-			-- Wait and fire the Sell_Item event
-			task.wait(0.2)
-			game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Sell_Item"):FireServer()
-		
-			-- Return to original position
-			hrp.CFrame = originalCFrame
-		end
-		
-		-- Call the teleportAndSell function once
-		teleportAndSell()
-	end,
- })
+    Name = "Sell This",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        
+        local function teleportAndSell()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+        
+            -- Save current position
+            local originalCFrame = hrp.CFrame
+        
+            -- Teleport to the sell point
+            local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+            hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+        
+            -- Wait and fire the Sell_Item event
+            task.wait(0.2)
+            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Sell_Item"):FireServer()
+        
+            -- Return to original position
+            hrp.CFrame = originalCFrame
+        end
+        
+        -- Call the teleportAndSell function once
+        teleportAndSell()
+    end,
+})
 
 -----------------------------------------------------------------------------------
 
 local ToggleState = false
 
 local Toggle = GardenTab:CreateToggle({
-	Name = "Auto Sell",
-	CurrentValue = false,
-	Flag = "AutoSellToggle",
-	Callback = function(Value)
-		ToggleState = Value
+    Name = "Auto Sell",
+    CurrentValue = false,
+    Flag = "AutoSellToggle",
+    Callback = function(Value)
+        ToggleState = Value
 
-		local player = game.Players.LocalPlayer
-		local replicatedStorage = game:GetService("ReplicatedStorage")
-		local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
+        local player = game.Players.LocalPlayer
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local sellEvent = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory")
 
-		local function teleportAndSell()
-			local character = player.Character or player.CharacterAdded:Wait()
-			local hrp = character:WaitForChild("HumanoidRootPart")
+        local function teleportAndSell()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
 
-			-- Save current position
-			local originalCFrame = hrp.CFrame
+            -- Save current position
+            local originalCFrame = hrp.CFrame
 
-			-- Teleport to the sell point
-			local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
-			hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+            -- Teleport to the sell point
+            local targetPart = workspace:WaitForChild("Tutorial_Points"):WaitForChild("Tutorial_Point_2")
+            hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
 
-			-- Wait and fire sell event
-			task.wait(0.2)
-			sellEvent:FireServer()
+            -- Wait and fire sell event
+            task.wait(0.2)
+            sellEvent:FireServer()
 
-			-- Return to original position
-			hrp.CFrame = originalCFrame
-		end
+            -- Return to original position
+            hrp.CFrame = originalCFrame
+        end
 
-		-- Start loop if toggle is enabled
-		if ToggleState then
-			task.spawn(function()
-				while ToggleState do
-					teleportAndSell()
-					task.wait(10) -- adjust how often to auto-sell
-				end
-			end)
-		end
-	end
+        -- Start loop if toggle is enabled
+        if ToggleState then
+            task.spawn(function()
+                while ToggleState do
+                    teleportAndSell()
+                    task.wait(10) -- adjust how often to auto-sell
+                end
+            end)
+        end
+    end
 })
 
 -----------------------------------------------------------------------------------
@@ -613,11 +613,11 @@ local SpeedSlider = PlayerTab:CreateSlider({
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
     end,
- })
+})
 
- -----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
 
- local JumpSlider = PlayerTab:CreateSlider({
+local JumpSlider = PlayerTab:CreateSlider({
     Name = "Player Jump",
     Range = {50, 500},
     Increment = 1,
@@ -627,11 +627,11 @@ local SpeedSlider = PlayerTab:CreateSlider({
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
     end,
- })
+})
 
- -----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
 
- local InfiniteJumpToggle = PlayerTab:CreateToggle({
+local InfiniteJumpToggle = PlayerTab:CreateToggle({
     Name = "Infinite Jump",
     CurrentValue = false,
     Flag = "InfiniteJump", 
@@ -727,90 +727,6 @@ local AntiAfkToggle = PlayerTab:CreateToggle({
             end
         end
     end,
-})
-
------------------------------------------------------------------------------------
-
-
-
-
-
------------------------------------- Teleport Tab ------------------------------------
-
-local TeleportSection = TeleportTab:CreateSection("Teleport To Player")
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- Input field inside your existing TeleportSection
-local PlayerInput = TeleportTab:CreateInput({
-    Name = "Teleport to Player",
-    CurrentValue = "",  
-    PlaceholderText = "Type part of player name...",
-    RemoveTextAfterFocusLost = false,
-    Flag = "TeleportPlayerInput",
-    Callback = function(Text)
-        if Text == "" then return end
-
-        -- Try to find player whose name starts with the typed text (case-insensitive)
-        local matchedPlayer = nil
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Name:lower():sub(1, #Text) == Text:lower() then
-                matchedPlayer = player
-                break
-            end
-        end
-
-        if not matchedPlayer then
-            warn("No matching player found for:", Text)
-            return
-        end
-
-        local targetChar = matchedPlayer.Character or matchedPlayer.CharacterAdded:Wait()
-        local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-        if not targetHRP then
-            warn("Target player has no HumanoidRootPart")
-            return
-        end
-
-        local localChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local localHRP = localChar:FindFirstChild("HumanoidRootPart")
-        if not localHRP then
-            warn("You have no HumanoidRootPart")
-            return
-        end
-
-        local targetPos = targetHRP.Position + Vector3.new(0, 3, 0)
-        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-        local goal = {CFrame = CFrame.new(targetPos)}
-
-        local tween = game:GetService("TweenService"):Create(localHRP, tweenInfo, goal)
-        tween:Play()
-
-        print("Teleported to", matchedPlayer.Name)
-    end,
-})
-
------------------------------------------------------------------------------------
-
-local TeleportSection = TeleportTab:CreateSection("Grow A Garden")
-
-TeleportTab:CreateButton({
-	Name = "Quest And Gear",
-	Callback = function()
-		local Players = game:GetService("Players")
-		local player = Players.LocalPlayer
-
-		local targetPosition = Vector3.new(-269.1260070800781, 4.442999839782715, -14.034000396728516)
-
-		local function instantTeleport()
-			local character = player.Character or player.CharacterAdded:Wait()
-			local hrp = character:WaitForChild("HumanoidRootPart")
-			hrp.CFrame = CFrame.new(targetPosition)
-		end
-
-		instantTeleport()
-	end,
 })
 
 -----------------------------------------------------------------------------------
@@ -929,6 +845,90 @@ VisualTab:CreateColorPicker({
 
 
 
+------------------------------------ Teleport Tab ------------------------------------
+
+local TeleportSection = TeleportTab:CreateSection("Teleport To Player")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Input field inside your existing TeleportSection
+local PlayerInput = TeleportTab:CreateInput({
+    Name = "Teleport to Player",
+    CurrentValue = "",  
+    PlaceholderText = "Type part of player name...",
+    RemoveTextAfterFocusLost = false,
+    Flag = "TeleportPlayerInput",
+    Callback = function(Text)
+        if Text == "" then return end
+
+        -- Try to find player whose name starts with the typed text (case-insensitive)
+        local matchedPlayer = nil
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Name:lower():sub(1, #Text) == Text:lower() then
+                matchedPlayer = player
+                break
+            end
+        end
+
+        if not matchedPlayer then
+            warn("No matching player found for:", Text)
+            return
+        end
+
+        local targetChar = matchedPlayer.Character or matchedPlayer.CharacterAdded:Wait()
+        local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+        if not targetHRP then
+            warn("Target player has no HumanoidRootPart")
+            return
+        end
+
+        local localChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+        if not localHRP then
+            warn("You have no HumanoidRootPart")
+            return
+        end
+
+        local targetPos = targetHRP.Position + Vector3.new(0, 3, 0)
+        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        local goal = {CFrame = CFrame.new(targetPos)}
+
+        local tween = game:GetService("TweenService"):Create(localHRP, tweenInfo, goal)
+        tween:Play()
+
+        print("Teleported to", matchedPlayer.Name)
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+local TeleportSection = TeleportTab:CreateSection("Grow A Garden")
+
+TeleportTab:CreateButton({
+    Name = "Quest And Gear",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+
+        local targetPosition = Vector3.new(-269.1260070800781, 4.442999839782715, -14.034000396728516)
+
+        local function instantTeleport()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+            hrp.CFrame = CFrame.new(targetPosition)
+        end
+
+        instantTeleport()
+    end,
+})
+
+-----------------------------------------------------------------------------------
+
+
+
+
+
 ------------------------------------ Other Tab ------------------------------------
 
 local OtherSection = OtherTab:CreateSection("Script")
@@ -939,26 +939,26 @@ local Button = OtherTab:CreateButton({
         loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
         print("Infinite Yield Enabled")
     end,
- })
+})
 
 
- local Button = OtherTab:CreateButton({
+local Button = OtherTab:CreateButton({
     Name = "Dex Explorer",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
         print("Dex Explorer Enabled")
     end,
- })
+})
 
 -----------------------------------------------------------------------------------
 
 local OtherSection = OtherTab:CreateSection("Close")
 
 local Button = OtherTab:CreateButton({
-	Name = "Quit",
-	Callback = function()
-		Rayfield:Destroy()
-	end,
- })
+    Name = "Quit",
+    Callback = function()
+        Rayfield:Destroy()
+    end,
+})
 
- -----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
