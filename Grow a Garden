@@ -243,15 +243,39 @@ local function setPromptsToAlwaysShow()
     end
 end
 
+-- Function to handle dynamically added ProximityPrompts
+local function onDescendantAdded(child)
+    if child:IsA("ProximityPrompt") then
+        local parent = child.Parent
+        if parent and parent:IsA("BasePart") then
+            local partName = parent.Name
+            local partID = tonumber(partName)
+            if partID and partID >= 1 and partID <= 100 then
+                child.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow
+            end
+        end
+    end
+end
+
 -- Toggle for setting ProximityPrompts to AlwaysShow for parts 1-100
+local connection -- Store the connection to disconnect later
 local Toggle = GardenTab:CreateToggle({
     Name = "Enable AlwaysShow for ProximityPrompts (1-100)",
     CurrentValue = false,
-    Flag = "Toggle1",
+    Flag = "ProximityPrompts",
     Callback = function(Value)
         if Value then
-            -- Set ProximityPrompts to AlwaysShow for parts 1-100
+            -- Set existing ProximityPrompts to AlwaysShow
             setPromptsToAlwaysShow()
+
+            -- Connect to DescendantAdded to handle dynamically added prompts
+            connection = workspace.DescendantAdded:Connect(onDescendantAdded)
+        else
+            -- Disconnect the event listener when toggle is turned off
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
         end
     end,
 })
