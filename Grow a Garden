@@ -797,7 +797,7 @@ TeleportTab:CreateButton({
 
 ------------------------------------ Visual Tab ------------------------------------
 
-local VisualSection = VisualTab:CreateSection("Esp And Highlight")
+local VisualSection = VisualTab:CreateSection("Highlight")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -898,93 +898,6 @@ VisualTab:CreateColorPicker({
         end
     end,
 })
-
------------------------------------------------------------------------------------
-
--- ESP Setup
-local espFolder = Instance.new("Folder", game.CoreGui)
-espFolder.Name = "NameESP"
-
--- Function to create name tag
-local function createNameESP(player)
-    if player == LocalPlayer then return end
-    if not player.Character then return end
-    local head = player.Character:FindFirstChild("Head")
-    if not head then return end
-    if espFolder:FindFirstChild(player.Name) then return end
-
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = player.Name
-    billboard.Adornee = head
-    billboard.Size = UDim2.new(0, 100, 0, 40)
-    billboard.StudsOffset = Vector3.new(0, 2, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = espFolder
-
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 1, 0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    nameLabel.TextStrokeTransparency = 0.5
-    nameLabel.Font = Enum.Font.SourceSansBold
-    nameLabel.TextScaled = true
-    nameLabel.Text = player.Name
-    nameLabel.Parent = billboard
-end
-
--- Clear all ESPs
-local function removeAllESP()
-    for _, gui in pairs(espFolder:GetChildren()) do
-        gui:Destroy()
-    end
-end
-
--- Keep track of ESP state
-local espEnabled = false
-
--- Function to handle ESP for a player
-local function handlePlayerESP(player)
-    if player == LocalPlayer then return end
-
-    player.CharacterAdded:Connect(function(character)
-        wait(1) -- Wait for character to fully load
-        if espEnabled then
-            createNameESP(player)
-        end
-    end)
-
-    if player.Character then
-        if espEnabled then
-            createNameESP(player)
-        end
-    end
-end
-
--- ESP Toggle
-VisualTab:CreateToggle({
-    Name = "ESP Name",
-    CurrentValue = false,
-    Flag = "NameESP",
-    Callback = function(state)
-        espEnabled = state
-        if state then
-            -- Turn ON
-            for _, player in pairs(Players:GetPlayers()) do
-                handlePlayerESP(player)
-            end
-        else
-            -- Turn OFF
-            removeAllESP()
-        end
-    end,
-})
-
--- Handle new players joining
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        handlePlayerESP(player)
-    end
-end)
 
 -----------------------------------------------------------------------------------
 
