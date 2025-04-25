@@ -36,7 +36,7 @@ local Window = Rayfield:CreateWindow({
 
 ------------------------------------ Tabs ------------------------------------
 
-local GardenTab = Window:CreateTab("Grow A Garden 🍇", false) -- Title, Image
+local GardenTab = Window:CreateTab("Grow a Garden 🍇", false) -- Title, Image
 local PlayerTab = Window:CreateTab("Player 👤", false) -- Title, Image
 local VisualTab = Window:CreateTab("Visual 👁️", false) -- Title, Image
 local TeleportTab = Window:CreateTab("Teleport 🕳️", false) -- Title, Image
@@ -74,6 +74,28 @@ local function spamEKey()
     end
 end
 
+-- Recursive function to find all ProximityPrompt objects in a given object
+local function findProximityPrompts(parent, validFruits)
+    for _, child in pairs(parent:GetDescendants()) do
+        if child:IsA("BasePart") and child:FindFirstChildOfClass("ProximityPrompt") then
+            table.insert(validFruits, child)
+        end
+    end
+end
+
+-- Function to remove Grow_Sign.Part from all farms
+local function removeGrowSigns()
+    for _, farm in pairs(workspace.Farm:GetChildren()) do
+        local growSign = farm:FindFirstChild("Grow_Sign")
+        if growSign then
+            local part = growSign:FindFirstChild("Part")
+            if part then
+                part:Destroy()
+            end
+        end
+    end
+end
+
 -- Combined Toggle for Auto Teleport, Auto Sell, and Spam E
 local CombinedToggle = GardenTab:CreateToggle({
     Name = "Auto Farm + Auto Sell",
@@ -89,6 +111,9 @@ local CombinedToggle = GardenTab:CreateToggle({
             task.spawn(function()
                 spamEKey()
             end)
+
+            -- Remove Grow_Sign.Part from all farms
+            removeGrowSigns()
 
             -- Start auto teleport
             TeleportConnection = RunService.RenderStepped:Connect(function()
@@ -109,39 +134,14 @@ local CombinedToggle = GardenTab:CreateToggle({
                 end
 
                 if playerFarm and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    local plantsFolder = playerFarm:FindFirstChild("Important") and playerFarm.Important:FindFirstChild("Plants_Physical")
-                    if plantsFolder then
-                        local validFruits = {}
+                    local validFruits = {}
 
-                        for _, fruitModel in pairs(plantsFolder:GetChildren()) do
-                            local fruitsFolder = fruitModel:FindFirstChild("Fruits")
-                            if fruitsFolder then
-                                for _, fruit in pairs(fruitsFolder:GetChildren()) do
-                                    -- Check Part 1
-                                    local part1 = fruit:FindFirstChild("1")
-                                    if part1 and part1:FindFirstChildOfClass("ProximityPrompt") then
-                                        table.insert(validFruits, part1)
-                                    end
+                    -- Recursively find all ProximityPrompt objects in the player's farm
+                    findProximityPrompts(playerFarm, validFruits)
 
-                                    -- Check Part 2
-                                    local part2 = fruit:FindFirstChild("2")
-                                    if part2 and part2:FindFirstChildOfClass("ProximityPrompt") then
-                                        table.insert(validFruits, part2)
-                                    end
-
-                                    -- Check Part 4 (new addition)
-                                    local part4 = fruit:FindFirstChild("4")
-                                    if part4 and part4:FindFirstChildOfClass("ProximityPrompt") then
-                                        table.insert(validFruits, part4)
-                                    end
-                                end
-                            end
-                        end
-
-                        if #validFruits > 0 then
-                            local randomPart = validFruits[math.random(1, #validFruits)]
-                            player.Character:SetPrimaryPartCFrame(randomPart.CFrame + Vector3.new(0, 5, 0))
-                        end
+                    if #validFruits > 0 then
+                        local randomPart = validFruits[math.random(1, #validFruits)]
+                        player.Character:SetPrimaryPartCFrame(randomPart.CFrame + Vector3.new(0, 5, 0))
                     end
                 end
             end)
