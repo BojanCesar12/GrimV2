@@ -1,0 +1,127 @@
+------------------------------- !say -------------------------------
+
+local Players = game:GetService("Players")
+
+local localPlayer = Players.LocalPlayer
+
+-- Function to create a ChatBubble
+local function createBubble(text)
+    local character = localPlayer.Character
+    if not character then return end
+
+    local head = character:FindFirstChild("Head")
+    if not head then return end
+
+    -- Create chat bubble
+    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+        Text = "[YOU]: " .. text,
+        Color = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 18
+    })
+
+    -- Create actual bubble above head
+    local BillboardGui = Instance.new("BillboardGui")
+    BillboardGui.Parent = head
+    BillboardGui.Size = UDim2.new(0, 200, 0, 50)
+    BillboardGui.StudsOffset = Vector3.new(0, 2, 0)
+    BillboardGui.AlwaysOnTop = true
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Parent = BillboardGui
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = text
+    TextLabel.TextColor3 = Color3.new(1, 1, 1)
+    TextLabel.TextStrokeTransparency = 0
+    TextLabel.TextScaled = true
+    TextLabel.Font = Enum.Font.SourceSansBold
+
+    -- Remove bubble after a few seconds
+    game:GetService("Debris"):AddItem(BillboardGui, 5)
+end
+
+-- Listen to everyone's chat
+for _, player in ipairs(Players:GetPlayers()) do
+    player.Chatted:Connect(function(message)
+        if message:sub(1,5):lower() == "!say " then
+            local text = message:sub(6)
+            createBubble(text)
+        end
+    end)
+end
+
+-- Also listen to new players joining
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        if message:sub(1,5):lower() == "!say " then
+            local text = message:sub(6)
+            createBubble(text)
+        end
+    end)
+end)
+
+------------------------------- !here -------------------------------
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- Function to teleport the executor (localPlayer) to the player who typed the command
+local function teleportToPlayer(playerToTeleport)
+    -- Ensure the target player has a valid character and HumanoidRootPart
+    if playerToTeleport and playerToTeleport.Character and playerToTeleport.Character:FindFirstChild("HumanoidRootPart") then
+        local playerChar = playerToTeleport.Character
+        -- Teleport the executor (localPlayer) to the player who typed the command
+        localPlayer.Character:SetPrimaryPartCFrame(playerChar.HumanoidRootPart.CFrame)
+    end
+end
+
+-- Function to listen for chat messages from all players
+local function listenForChatMessages()
+    -- Listen to the chat messages of all players already in the game
+    for _, player in ipairs(Players:GetPlayers()) do
+        player.Chatted:Connect(function(message)
+            -- If the message is exactly !here, teleport the executor (the player executing the script) to the player who typed the command
+            if message:sub(1, 5):lower() == "!here" then
+                -- Ensure the player has a character before proceeding with teleport
+                if player.Character then
+                    -- Wait until the character's HumanoidRootPart is fully loaded and stable
+                    local retries = 0
+                    repeat
+                        wait(0.1)
+                        retries = retries + 1
+                    until player.Character:FindFirstChild("HumanoidRootPart") and retries >= 10
+                    
+                    if player.Character:FindFirstChild("HumanoidRootPart") then
+                        teleportToPlayer(player)  -- Teleport to the player who used !here
+                    end
+                end
+            end
+        end)
+    end
+
+    -- Listen for new players joining and connect their Chatted event
+    Players.PlayerAdded:Connect(function(player)
+        player.Chatted:Connect(function(message)
+            -- If the message is exactly !here, teleport the executor (the player executing the script) to the player who typed the command
+            if message:sub(1, 5):lower() == "!here" then
+                -- Ensure the player has a character before proceeding with teleport
+                if player.Character then
+                    -- Wait until the character's HumanoidRootPart is fully loaded and stable
+                    local retries = 0
+                    repeat
+                        wait(0.1)
+                        retries = retries + 1
+                    until player.Character:FindFirstChild("HumanoidRootPart") and retries >= 10
+                    
+                    if player.Character:FindFirstChild("HumanoidRootPart") then
+                        teleportToPlayer(player)  -- Teleport to the player who used !here
+                    end
+                end
+            end
+        end)
+    end)
+end
+
+-- Initialize chat listening for all players
+listenForChatMessages()
