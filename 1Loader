@@ -1,5 +1,5 @@
 if game.PlaceId == 126884695634066 then
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/BojanCesar12/GrimV2/refs/heads/main/Bot-Grow-a-Garden'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/BojanCesar12/GrimV2/refs/heads/main/Grow-a-Garden'))()
 else
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/BojanCesar12/GrimV2/refs/heads/main/Bot-Universal'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/BojanCesar12/GrimV2/refs/heads/main/Universal'))()
 end
